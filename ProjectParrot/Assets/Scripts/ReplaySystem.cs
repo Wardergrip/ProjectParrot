@@ -1,8 +1,15 @@
 using UnityEngine;
 
+public enum ReplaySystemType
+{
+	Input,
+	State
+}
+
 public class ReplaySystem : MonoBehaviour
 {
 	private IReplaySystem _replaySystem = InputBasedReplaySystem.Instance;
+	private ReplaySystemType _type = ReplaySystemType.Input;
 
 	private void Update()
 	{
@@ -23,7 +30,15 @@ public class ReplaySystem : MonoBehaviour
 		}
 		if (Input.GetKeyDown(KeyCode.I))
 		{
-			// Switch
+			switch (_type) 
+			{
+				case ReplaySystemType.Input:
+					_replaySystem = StateBasedReplaySystem.Instance;
+					break;
+				case ReplaySystemType.State:
+					_replaySystem = InputBasedReplaySystem.Instance;
+					break;
+			}
 		}
 
 	}
