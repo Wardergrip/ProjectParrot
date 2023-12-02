@@ -22,21 +22,25 @@ public enum ReplayState
 {
 	Idle,
 	Recording,
+	DoneRecording,
 	Playing
 }
 
-public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>
+public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplaySystem
 {
 	public ReplayState ReplayState { get; private set; }
 
 	private readonly List<PlayerAction> _registeredPlayerInputs = new();
 	public List<PlayerAction> RegisteredPlayerInputs { get => _registeredPlayerInputs; }
+
+	public bool IsRecording => ReplayState == ReplayState.Recording;
+
 	private float _startTime = 0;
 	private float _lastTime = 0;
 
-	public void StartRecord()
+	public void StartRecording()
 	{
-		if (ReplayState != ReplayState.Idle)
+		if (ReplayState != ReplayState.Idle && ReplayState != ReplayState.DoneRecording)
 		{
 			return;
 		}
@@ -46,16 +50,23 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>
 		_lastTime = _startTime;
 		ReplayState = ReplayState.Recording;
 	}
-	private void Update()
+	public void StopRecording()
 	{
-		if (Input.GetKeyDown(KeyCode.K))
+		if (ReplayState != ReplayState.Recording)
 		{
-			Play();
+			return;
 		}
-		if (Input.GetKeyDown(KeyCode.L))
+		Debug.Log($"Stopped recording. Registered {_registeredPlayerInputs.Count} actions");
+		ReplayState = ReplayState.DoneRecording;
+	}
+	public void PlayRecording()
+	{
+		if (ReplayState == ReplayState.Playing)
 		{
-			StartRecord();
+			return;
 		}
+		ReplayState = ReplayState.Playing;
+		StartCoroutine(Simulate());
 	}
 
 	public void RegisterAction(PlayerAction action)
@@ -77,17 +88,6 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>
 			ActionType = action,
 			VectorValue = context.valueType == typeof(Vector2) ? context.ReadValue<Vector2>() : Vector2.zero
 		});
-	}
-
-	public void Play()
-	{
-		if (ReplayState == ReplayState.Playing)
-		{
-			return;
-		}
-		Debug.Log($"Registered inputs: {_registeredPlayerInputs.Count}");
-		ReplayState = ReplayState.Playing;
-		StartCoroutine(Simulate());
 	}
 
 	private IEnumerator Simulate()
