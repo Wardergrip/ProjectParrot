@@ -13,8 +13,8 @@ public class StateBasedRecorder : MonoBehaviour
 	private static int s_idCounter = 0;
 
 	public int Id { get; private set; }
-	[SerializeField] private GameObject _thisPrefab;
-	public GameObject ThisPrefab { get => _thisPrefab; }
+	[SerializeField] private string _thisPrefab;
+	public GameObject ThisPrefab { get => Resources.Load(_thisPrefab) as GameObject; }
 
 	public bool ForceId(int id)
 	{
