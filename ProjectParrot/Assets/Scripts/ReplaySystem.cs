@@ -8,8 +8,13 @@ public enum ReplaySystemType
 
 public class ReplaySystem : MonoBehaviour
 {
-	private IReplaySystem _replaySystem = InputBasedReplaySystem.Instance;
+	private IReplaySystem _replaySystem;
 	private ReplaySystemType _type = ReplaySystemType.Input;
+
+	private void Awake()
+	{
+		_replaySystem = InputBasedReplaySystem.Instance;
+	}
 
 	private void Update()
 	{
@@ -34,9 +39,13 @@ public class ReplaySystem : MonoBehaviour
 			{
 				case ReplaySystemType.Input:
 					_replaySystem = StateBasedReplaySystem.Instance;
+					_type = ReplaySystemType.State;
+					Debug.Log($"Current replay system is now StateBased");
 					break;
 				case ReplaySystemType.State:
 					_replaySystem = InputBasedReplaySystem.Instance;
+					_type = ReplaySystemType.Input;
+					Debug.Log($"Current replay system is now InputBased");
 					break;
 			}
 		}
