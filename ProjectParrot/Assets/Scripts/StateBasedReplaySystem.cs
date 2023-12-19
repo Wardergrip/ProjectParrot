@@ -27,7 +27,8 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 
 	public bool IsRecording => ReplayState == ReplayState.Recording;
 
-	private static readonly float s_waitTime = 0.2f;
+	public static float s_WaitTime { get => 0.2f; }
+	public static bool s_ShouldLerp { get => true; }
 
 	public List<StateBasedRecorder> StateBasedRecorders { get; private set; } = new();
 	private readonly List<EntityRecording> _entityRecordings = new();
@@ -68,7 +69,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 	{
 		while (ReplayState == ReplayState.Recording) 
 		{
-			yield return new WaitForSeconds(s_waitTime);
+			yield return new WaitForSeconds(s_WaitTime);
 			foreach (StateBasedRecorder rec in StateBasedRecorders)
 			{
 				EntityRecording thisEntityRecording = _entityRecordings.Find((EntityRecording entityRec) => entityRec.Id == rec.Id);
@@ -99,7 +100,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 				earliestTimeStamp = Mathf.Min(earliestTimeStamp, data.TimeStamp);
 			}
 		}
-		int ticks = (int)((latestTimeStamp - earliestTimeStamp) / s_waitTime);
+		int ticks = (int)((latestTimeStamp - earliestTimeStamp) / s_WaitTime);
 		float currentTime = earliestTimeStamp;
 		List<Tuple<StateBasedRecorder,TransformData>> actionList = new();
 		while (ticks-- > 0)
@@ -122,6 +123,9 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 							.GetComponentOrSearchInParentAndChilderen<StateBasedRecorder>();
 						Debug.Assert(sbr, $"{entityRecording.Prefab.name} is not a valid StateBaseRecorder prefab");
 						sbr.ForceId(entityRecording.Id);
+						TransformData transformData = data.Value;
+						sbr.transform.SetLocalPositionAndRotation(transformData.Position, transformData.Rotation);
+						sbr.transform.localScale = transformData.Scale;
 					}
 					actionList.Add(new (sbr,data.Value));
 				}
@@ -131,8 +135,8 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 			{
 				sbr.LoadState(data);
 			}
-			yield return new WaitForSeconds(s_waitTime);
-			currentTime += s_waitTime;
+			yield return new WaitForSeconds(s_WaitTime);
+			currentTime += s_WaitTime;
 		}
 		ReplayState = ReplayState.Idle;
 		Debug.Log($"End of playback");
