@@ -21,6 +21,12 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 		public int Id { get; set; }
 		public GameObject Prefab { get; set; }
 		public List<DataStamp<TransformData>> Data { get; private set; } = new();
+		public int Size()
+		{
+			return sizeof(int) + 
+				8 /*GameObject pointer in 64bit*/ +
+				(TransformData.Size() + sizeof(float) /*timestamp*/ ) * Data.Count;
+		}
 	}
 
 	public ReplayState ReplayState { get; private set; }
@@ -32,6 +38,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 
 	public List<StateBasedRecorder> StateBasedRecorders { get; private set; } = new();
 	private readonly List<EntityRecording> _entityRecordings = new();
+	public int TotalSavedSize => _entityRecordings.Count * _entityRecordings[0].Size();
 
 	public void PlayRecording()
 	{
@@ -61,7 +68,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 		{
 			return;
 		}
-		Debug.Log($"Stopped recording.");
+		Debug.Log($"Stopped recording. Size: {TotalSavedSize} bytes");
 		ReplayState = ReplayState.DoneRecording;
 	}
 

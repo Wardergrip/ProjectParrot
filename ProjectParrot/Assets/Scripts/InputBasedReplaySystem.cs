@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -16,6 +17,14 @@ public class PlayerAction
 	public float SecondsPassedSinceAction { get; set; }
 	public Action ActionType { get; set; }
 	public Vector2 VectorValue { get; set; }
+	public int Size()
+	{
+		return 
+			Marshal.SizeOf(typeof(InputAction.CallbackContext)) + 
+			sizeof(float) + 
+			sizeof(Action) + 
+			Marshal.SizeOf(typeof(Vector2));
+	}
 }
 
 public enum ReplayState
@@ -32,6 +41,7 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplay
 
 	private readonly List<PlayerAction> _registeredPlayerInputs = new();
 	public List<PlayerAction> RegisteredPlayerInputs { get => _registeredPlayerInputs; }
+	public int TotalSavedSize => RegisteredPlayerInputs.Count * _registeredPlayerInputs[0].Size();
 
 	public bool IsRecording => ReplayState == ReplayState.Recording;
 
@@ -56,7 +66,7 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplay
 		{
 			return;
 		}
-		Debug.Log($"Stopped recording. Registered {_registeredPlayerInputs.Count} actions");
+		Debug.Log($"Stopped recording. Size: {TotalSavedSize} bytes");
 		ReplayState = ReplayState.DoneRecording;
 	}
 	public void PlayRecording()

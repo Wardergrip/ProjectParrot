@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Linq;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 public struct TransformData
@@ -8,6 +9,7 @@ public struct TransformData
 	public Vector3 Position;
 	public Quaternion Rotation;
 	public Vector3 Scale;
+	public static int Size() => Marshal.SizeOf(typeof(TransformData));
 }
 
 public class StateBasedRecorder : MonoBehaviour
