@@ -13,17 +13,19 @@ public class PlayerAction
 		OnPlayerAim,
 		OnPlayerShoot
 	}
-	public InputAction.CallbackContext Input { get; set; }
 	public float SecondsPassedSinceAction { get; set; }
 	public Action ActionType { get; set; }
 	public Vector2 VectorValue { get; set; }
 	public int Size()
 	{
+		int floatSize = sizeof(float);
+		int actionSize = sizeof(Action);
+		int vector2Size = Marshal.SizeOf(typeof(Vector2));
+
 		return 
-			Marshal.SizeOf(typeof(InputAction.CallbackContext)) + 
-			sizeof(float) + 
-			sizeof(Action) + 
-			Marshal.SizeOf(typeof(Vector2));
+			floatSize + 
+			actionSize + 
+			vector2Size;
 	}
 }
 
@@ -54,7 +56,7 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplay
 		{
 			return;
 		}
-		Debug.Log($"Started recording");
+		Debug.Log($"[INPUT] Started recording");
 		_registeredPlayerInputs.Clear();
 		_startTime = Time.realtimeSinceStartup;
 		_lastTime = _startTime;
@@ -66,7 +68,7 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplay
 		{
 			return;
 		}
-		Debug.Log($"Stopped recording. Size: {TotalSavedSize} bytes");
+		Debug.Log($"[INPUT] Stopped recording. Size: {Utils.FormatByteCount(TotalSavedSize)} bytes");
 		ReplayState = ReplayState.DoneRecording;
 	}
 	public void PlayRecording()
@@ -94,7 +96,6 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplay
 	{
 		RegisterAction(new PlayerAction()
 		{
-			Input = context,
 			ActionType = action,
 			VectorValue = context.valueType == typeof(Vector2) ? context.ReadValue<Vector2>() : Vector2.zero
 		});
@@ -107,13 +108,13 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplay
 			yield return new WaitForSeconds(_registeredPlayerInputs[i].SecondsPassedSinceAction);
 			SimulateAction(_registeredPlayerInputs[i]);
 		}
-		Debug.Log($"End of simulation");
+		Debug.Log($"[INPUT] End of simulation");
 		ReplayState = ReplayState.Idle;
 	}
 
 	private void SimulateAction(PlayerAction playerAction)
 	{
-		Debug.Log($"Simulating action...");
+		Debug.Log($"[INPUT] Simulating action...");
 		Player player = Player.Instance;
 		switch (playerAction.ActionType)
 		{
@@ -127,7 +128,7 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplay
 				player.Shoot();
 				break;
 			default:
-				Debug.LogError($"Action not implemented: {playerAction.ActionType}");
+				Debug.LogError($"[INPUT] Action not implemented: {playerAction.ActionType}");
 				break;
 		}
 	}

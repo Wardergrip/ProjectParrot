@@ -28,4 +28,20 @@ public static partial class Utils
         return GetComponentOrSearchInParentAndChilderen<T>(mb.gameObject);
     }
 
+    public static string FormatByteCount(int byteAmount)
+    {
+		string[] sizeSuffixes = { "b", "kb", "mb", "gb" };
+		int index = 0;
+		int originalByteAmount = byteAmount;
+
+		while (byteAmount >= 1024 && index < sizeSuffixes.Length - 1)
+		{
+			byteAmount /= 1024;
+			++index;
+		}
+
+		string originalAmount = originalByteAmount != byteAmount ? $" ({originalByteAmount}b)" : "";
+		return $"{byteAmount:0.#}{sizeSuffixes[index]}{originalAmount}";
+	}
+
 }

@@ -23,9 +23,15 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 		public List<DataStamp<TransformData>> Data { get; private set; } = new();
 		public int Size()
 		{
-			return sizeof(int) + 
-				8 /*GameObject pointer in 64bit*/ +
-				(TransformData.Size() + sizeof(float) /*timestamp*/ ) * Data.Count;
+			int intSize = sizeof(int);
+			int gameObjectPtrSize = 8; // GameObject pointer in 64bit
+			int transformDataSize = TransformData.Size();
+			int floatSize = sizeof(float);
+
+			return 
+				intSize + 
+				gameObjectPtrSize +
+				(transformDataSize + floatSize /*timestamp*/ ) * Data.Count;
 		}
 	}
 
@@ -33,7 +39,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 
 	public bool IsRecording => ReplayState == ReplayState.Recording;
 
-	public static float s_WaitTime { get => 0.2f; }
+	public static float s_WaitTime { get; set; } = 0.2f;
 	public static bool s_ShouldLerp { get => true; }
 
 	public List<StateBasedRecorder> StateBasedRecorders { get; private set; } = new();
@@ -56,7 +62,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 		{
 			return;
 		}
-		Debug.Log($"Started recording");
+		Debug.Log($"[STATE] Started recording");
 		_entityRecordings.Clear();
 		ReplayState = ReplayState.Recording;
 		StartCoroutine(RecordingCoroutine());
@@ -68,7 +74,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 		{
 			return;
 		}
-		Debug.Log($"Stopped recording. Size: {TotalSavedSize} bytes");
+		Debug.Log($"[STATE] Stopped recording. Size: {Utils.FormatByteCount(TotalSavedSize)} bytes");
 		ReplayState = ReplayState.DoneRecording;
 	}
 
@@ -96,7 +102,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 
 	private IEnumerator PlaybackCoroutine()
 	{
-		Debug.Log($"Start of playback");
+		Debug.Log($"[STATE] Start of playback");
 		float latestTimeStamp = 0.0f;
 		float earliestTimeStamp = float.MaxValue;
 		foreach (var entityRecordings in _entityRecordings)
@@ -137,7 +143,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 					actionList.Add(new (sbr,data.Value));
 				}
 			}
-			Debug.Log($"LoadingState of batch...");
+			Debug.Log($"[STATE] LoadingState of batch...");
 			foreach ((StateBasedRecorder sbr, TransformData data) in actionList)
 			{
 				sbr.LoadState(data);
