@@ -16,7 +16,7 @@ public class PlayerAction
 	public float SecondsPassedSinceAction { get; set; }
 	public Action ActionType { get; set; }
 	public Vector2 VectorValue { get; set; }
-	public int Size()
+	public static int Size()
 	{
 		int floatSize = sizeof(float);
 		int actionSize = sizeof(Action);
@@ -43,7 +43,7 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplay
 
 	private readonly List<PlayerAction> _registeredPlayerInputs = new();
 	public List<PlayerAction> RegisteredPlayerInputs { get => _registeredPlayerInputs; }
-	public int TotalSavedSize => RegisteredPlayerInputs.Count * _registeredPlayerInputs[0].Size();
+	public int TotalSavedSize => RegisteredPlayerInputs.Count * PlayerAction.Size();
 
 	public bool IsRecording => ReplayState == ReplayState.Recording;
 
@@ -68,7 +68,7 @@ public class InputBasedReplaySystem : Singleton<InputBasedReplaySystem>, IReplay
 		{
 			return;
 		}
-		Debug.Log($"[INPUT] Stopped recording. Size: {Utils.FormatByteCount(TotalSavedSize)} bytes");
+		Debug.Log($"[INPUT] Stopped recording. Size: {Utils.FormatByteCount(TotalSavedSize)}. (Amount: {RegisteredPlayerInputs.Count})");
 		ReplayState = ReplayState.DoneRecording;
 	}
 	public void PlayRecording()

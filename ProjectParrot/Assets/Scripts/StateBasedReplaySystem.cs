@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplaySystem
@@ -21,16 +22,16 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 		public int Id { get; set; }
 		public GameObject Prefab { get; set; }
 		public List<DataStamp<TransformData>> Data { get; private set; } = new();
-		public int Size()
+		public int Size(bool includeIdAndPtr = true)
 		{
 			int intSize = sizeof(int);
 			int gameObjectPtrSize = 8; // GameObject pointer in 64bit
 			int transformDataSize = TransformData.Size();
 			int floatSize = sizeof(float);
 
-			return 
-				intSize + 
-				gameObjectPtrSize +
+			return
+				(includeIdAndPtr ? intSize : 0) +
+				(includeIdAndPtr ? gameObjectPtrSize : 0) +
 				(transformDataSize + floatSize /*timestamp*/ ) * Data.Count;
 		}
 	}
@@ -44,7 +45,7 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 
 	public List<StateBasedRecorder> StateBasedRecorders { get; private set; } = new();
 	private readonly List<EntityRecording> _entityRecordings = new();
-	public int TotalSavedSize => _entityRecordings.Count * _entityRecordings[0].Size();
+	public int TotalSavedSize => _entityRecordings.Count * _entityRecordings[0].Size(false);
 
 	public void PlayRecording()
 	{
@@ -74,7 +75,8 @@ public class StateBasedReplaySystem : Singleton<StateBasedReplaySystem>, IReplay
 		{
 			return;
 		}
-		Debug.Log($"[STATE] Stopped recording. Size: {Utils.FormatByteCount(TotalSavedSize)} bytes");
+		int sum = _entityRecordings.Sum(x => x.Data.Count);
+		Debug.Log($"[STATE] Stopped recording. Size: {Utils.FormatByteCount(TotalSavedSize)} (Entities: {_entityRecordings.Count}, amount of state total: {sum})");
 		ReplayState = ReplayState.DoneRecording;
 	}
 

@@ -3,15 +3,28 @@ using UnityEngine;
 
 public class ReplayControlPanel : MonoBehaviour
 {
-    [SerializeField][Range(float.Epsilon,1.0f)] private float _stateInterval = 0.2f;
+	[Header("State settings")]
+    [SerializeField] private float _stateInterval = 0.2f;
 
+	[Header("Actions")]
 	[SerializeField] private int _actionsPerSecond = 1;
 	[SerializeField] private bool _performRandomActions = false;
+
+	[Header("Recording")]
+	[SerializeField] private float _recordingDuration = 5;
+	[SerializeField] private bool _startTimedRecording = false;
 
 	private Coroutine _randomActionsCoroutine;
 
 	private void Update()
 	{
+		if (_startTimedRecording)
+		{
+			ReplaySystem.Instance.StartStopRecord();
+			StartCoroutine(StartStopRecordAfterSeconds(_recordingDuration));
+			_startTimedRecording = false;
+		}
+
 		if (!StateBasedReplaySystem.Instance.IsRecording)
 		{
 			StateBasedReplaySystem.s_WaitTime = _stateInterval;
@@ -53,5 +66,11 @@ public class ReplayControlPanel : MonoBehaviour
 			}
 			yield return new WaitForSeconds(1.0f);
 		}
+	}
+
+	private IEnumerator StartStopRecordAfterSeconds(float seconds)
+	{
+		yield return new WaitForSeconds(seconds);
+		ReplaySystem.Instance.StartStopRecord();
 	}
 }

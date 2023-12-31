@@ -7,13 +7,13 @@ public enum ReplaySystemType
 	State = 1
 }
 
-public class ReplaySystem : MonoBehaviour
+public class ReplaySystem : Singleton<ReplaySystem>
 {
 	private readonly List<IReplaySystem> _replaySystems = new();
 	private IReplaySystem _replaySystem;
 	private ReplaySystemType _type = ReplaySystemType.Input;
 
-	private void Awake()
+	protected override void LateAwake()
 	{
 		_replaySystem = InputBasedReplaySystem.Instance;
 		_replaySystems.Add(InputBasedReplaySystem.Instance);
@@ -30,14 +30,7 @@ public class ReplaySystem : MonoBehaviour
 		}
 		if (Input.GetKeyDown(KeyCode.O))
 		{
-			if (_replaySystems[0].IsRecording)
-			{
-				_replaySystems.ForEach(x => x.StopRecording());
-			}
-			else
-			{
-				_replaySystems.ForEach(x => x.StartRecording());
-			}
+			StartStopRecord();
 		}
 		if (Input.GetKeyDown(KeyCode.I))
 		{
@@ -52,6 +45,18 @@ public class ReplaySystem : MonoBehaviour
 					Debug.Log($"Current replay system selected is now InputBased");
 					break;
 			}
+		}
+	}
+
+	public void StartStopRecord()
+	{
+		if (_replaySystems[0].IsRecording)
+		{
+			_replaySystems.ForEach(x => x.StopRecording());
+		}
+		else
+		{
+			_replaySystems.ForEach(x => x.StartRecording());
 		}
 	}
 
